@@ -44,7 +44,7 @@ if not os.path.exists(UPLOAD_DIR):
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # 配置模板
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates = Jinja2Templates(directory="templates")
 
 # Coze API配置
 COZE_API_URL = "https://api.coze.cn/v1/workflow/run"
