@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, Request
+import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
@@ -169,7 +170,6 @@ async def upload_images(pic1: UploadFile = File(...), pic2: UploadFile = File(..
 async def startup_event():
     logger.info("应用启动")
     logger.info(f"Python 版本: {sys.version}")
-    logger.info(f"FastAPI 版本: {fastapi.__version__}")
     logger.info(f"当前工作目录: {os.getcwd()}")
 
 @app.get("/health")

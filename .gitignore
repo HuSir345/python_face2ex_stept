@@ -43,3 +43,9 @@ Thumbs.db
 # Vercel
 .vercel 
 .vercel
+
+# 环境变量
+.env
+.env.local
+.next
+node_modules
