@@ -8,17 +8,21 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from datetime import datetime
 import base64
+from pathlib import Path
+import sys
 
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler()
+        logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
+
+# 获取当前文件的目录
+BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI()
 
@@ -32,15 +36,15 @@ app.add_middleware(
 )
 
 # 创建上传目录
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = BASE_DIR / "uploads"
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
 # 静态文件服务
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # 配置模板
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # Coze API配置
 COZE_API_URL = "https://api.coze.cn/v1/workflow/run"
@@ -60,10 +64,8 @@ async def read_root(request: Request):
 async def upload_images(pic1: UploadFile = File(...), pic2: UploadFile = File(...)):
     try:
         logger.info("开始处理图片上传请求")
-        logger.info(f"接收到的图片1文件名: {pic1.filename}")
-        logger.info(f"接收到的图片2文件名: {pic2.filename}")
         
-        # 读取图片内容
+        # 直接读取图片内容并上传到ImgBB
         pic1_content = await pic1.read()
         pic2_content = await pic2.read()
         
@@ -162,7 +164,24 @@ async def upload_images(pic1: UploadFile = File(...), pic2: UploadFile = File(..
         logger.error(f"处理过程中发生错误: {str(e)}")
         return {"status": "error", "message": str(e)}
 
+# 在应用启动时添加日志
+@app.on_event("startup")
+async def startup_event():
+    logger.info("应用启动")
+    logger.info(f"Python 版本: {sys.version}")
+    logger.info(f"FastAPI 版本: {fastapi.__version__}")
+    logger.info(f"当前工作目录: {os.getcwd()}")
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "python_version": sys.version,
+        "working_directory": os.getcwd()
+    }
+
 if __name__ == "__main__":
     logger.info(f"服务启动于: http://localhost:8000")
     logger.info(f"图片上传目录: {os.path.abspath(UPLOAD_DIR)}")
-    uvicorn.run(app, host="127.0.0.1", port=8000) 
+    uvicorn.run("main:app", host="127.0.0.1", port=8000) 

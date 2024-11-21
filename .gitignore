@@ -38,4 +38,8 @@ uploads/
 
 # 系统文件
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Vercel
+.vercel 
+.vercel
